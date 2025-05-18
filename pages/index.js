@@ -167,11 +167,11 @@ export default function Home() {
     </div>
     <div className='card'>
 
-        <p>* Criar Menus de acesso /clientes /quartos / reservas /</p>
-        <p>* Criar CRUD de clientes</p>
-        <p>* Criar CRUD de quartos</p>
-        <p>* Criar CRUD de reservas</p>
-        <p>* Criar Opções Check-in / Check-out com as datas</p>
+        <p>* Criar Menus de acesso /clientes /quartos / reservas.</p>
+        <p>* Criar CRUD de clientes.</p>
+        <p>* Criar CRUD de quartos.</p>
+        <p>* Criar CRUD de reservas.</p>
+        <p>* Criar Opções Check-in / Check-out com as datas.</p>
         
 
     </div>
