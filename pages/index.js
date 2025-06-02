@@ -1,239 +1,181 @@
-import { useState, useEffect } from 'react'
+import { useState } from "react";
+import { useRouter } from "next/router";
+import Head from "next/head";
 
 export default function Home() {
-  const [clientes, setClientes] = useState([])
-  const [quartos, setQuartos] = useState([])
-  const [reservas, setReservas] = useState([])
-  const [quartosDisponiveis, setQuartosDisponiveis] = useState([])
+  const router = useRouter();
+  const [checkInDate, setCheckInDate] = useState("");
+  const [checkOutDate, setCheckOutDate] = useState("");
+  const [showOptions, setShowOptions] = useState(false);
 
-  const [clienteNome, setClienteNome] = useState('')
-  const [clienteEmail, setClienteEmail] = useState('')
-  const [quartoNumero, setQuartoNumero] = useState('')
-  const [quartoTipo, setQuartoTipo] = useState('')
-  const [quartoPreco, setQuartoPreco] = useState('')
-  const [reservaCliente, setReservaCliente] = useState('')
-  const [reservaQuarto, setReservaQuarto] = useState('')
-  const [dataInicio, setDataInicio] = useState('')
-  const [dataFim, setDataFim] = useState('')
-
-  useEffect(() => {
-    fetch('/api/clientes').then(res => res.json()).then(setClientes)
-    fetch('/api/quartos').then(res => res.json()).then(setQuartos)
-    fetch('/api/reservas').then(res => res.json()).then(setReservas)
-  }, [])
-
-  const criarCliente = async () => {
-  const res = await fetch('/api/clientes', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ nome: clienteNome, email: clienteEmail })
-  })
-
-  const data = await res.json()
-
-  if (res.ok) {
-    // Mostra os dados do cliente criado
-    alert(`Cliente criado com sucesso:\n${JSON.stringify(data, null, 2)}`)
-
-    // Atualiza lista sem novo fetch
-    setClientes(prev => [...prev, data])
-  } else {
-    alert(`Erro ao criar cliente:\n${data.error || data.message}`)
-  }
-
-  setClienteNome('')
-  setClienteEmail('')
-}
-
-  const criarQuarto = async () => {
-    await fetch('/api/quartos', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ numero: parseInt(quartoNumero), tipo: quartoTipo, preco: parseFloat(quartoPreco) })
-    })
-    setQuartoNumero('')
-    setQuartoTipo('')
-    setQuartoPreco('')
-    const data = await fetch('/api/quartos').then(res => res.json())
-    setQuartos(data)
-  }
-
-  const criarReserva = async () => {
-    const res = await fetch('/api/reservas', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        clienteId: parseInt(reservaCliente),
-        quartoId: parseInt(reservaQuarto),
-        dataInicio,
-        dataFim
-      })
-    })
-
-    if (!res.ok) {
-      const err = await res.json()
-      alert(err.error || 'Erro ao reservar')
-      return
+  const handleSearch = () => {
+    if (!checkInDate || !checkOutDate) {
+      alert("Por favor, selecione ambas as datas");
+      return;
     }
+    setShowOptions(true);
+  };
 
-    setDataInicio('')
-    setDataFim('')
-    setReservaCliente('')
-    setReservaQuarto('')
-    const data = await fetch('/api/reservas').then(res => res.json())
-    setReservas(data)
-  }
-
-  const buscarQuartosDisponiveis = async () => {
-    if (!dataInicio || !dataFim) {
-      alert('Preencha data de início e fim!')
-      return
-    }
-
-    const res = await fetch(`/api/quartos/disponiveis?dataInicio=${dataInicio}&dataFim=${dataFim}`)
-    const data = await res.json()
-    setQuartosDisponiveis(data)
-  }
+  const handleReset = () => {
+    setCheckInDate("");
+    setCheckOutDate("");
+    setShowOptions(false);
+  };
 
   return (
-  <div className="container">
-    <h1>Hotelaria - Painel de Controle</h1>
+    <div className="container py-4">
+      <Head>
+        <title>Hotelaria - Painel de Controle</title>
+        <link
+          rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css"
+        />
+        <link
+          rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+        />
+      </Head>
 
-    <div className="card">
-      <h2>Cadastrar Cliente</h2>
-      <input placeholder="Nome" value={clienteNome} onChange={e => setClienteNome(e.target.value)} />
-      <input placeholder="Email" value={clienteEmail} onChange={e => setClienteEmail(e.target.value)} />
-      <button onClick={criarCliente}>Salvar Cliente</button>
+      <div className="card shadow">
+        <div className="card-header bg-primary text-white">
+          <h1 className="h4 mb-0">
+            <i className="fas fa-hotel me-2"></i>
+            Hotelaria - Painel de Controle
+          </h1>
+        </div>
+
+        <div className="card-body">
+          {/* Seção de Check-in/Check-out */}
+          <div className="card mb-4">
+            <div className="card-header bg-light">
+              <h2 className="h5 mb-0">
+                <i className="fas fa-calendar-alt me-2"></i>
+                Check-in / Check-out
+              </h2>
+            </div>
+            <div className="card-body">
+              <div className="row g-3">
+                <div className="col-md-6">
+                  <label className="form-label">Data de Check-in</label>
+                  <input
+                    type="date"
+                    className="form-control"
+                    value={checkInDate}
+                    onChange={(e) => setCheckInDate(e.target.value)}
+                    min={new Date().toISOString().split('T')[0]}
+                  />
+                </div>
+                <div className="col-md-6">
+                  <label className="form-label">Data de Check-out</label>
+                  <input
+                    type="date"
+                    className="form-control"
+                    value={checkOutDate}
+                    onChange={(e) => setCheckOutDate(e.target.value)}
+                    min={checkInDate || new Date().toISOString().split('T')[0]}
+                  />
+                </div>
+              </div>
+
+              <div className="d-flex gap-2 mt-3">
+                <button
+                  onClick={handleSearch}
+                  className="btn btn-primary flex-grow-1"
+                  disabled={!checkInDate || !checkOutDate}
+                >
+                  <i className="fas fa-search me-2"></i>
+                  Verificar Disponibilidade
+                </button>
+                <button
+                  onClick={handleReset}
+                  className="btn btn-secondary"
+                >
+                  <i className="fas fa-times me-2"></i>
+                  Limpar
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Opções após seleção de datas */}
+          {showOptions && (
+            <div className="card mb-4 border-success">
+              <div className="card-header bg-success text-white">
+                <h2 className="h5 mb-0">
+                  <i className="fas fa-check-circle me-2"></i>
+                  Opções Disponíveis
+                </h2>
+              </div>
+              <div className="card-body">
+                <div className="alert alert-info">
+                  Período selecionado: {new Date(checkInDate).toLocaleDateString()} a {new Date(checkOutDate).toLocaleDateString()}
+                </div>
+
+                <div className="d-flex flex-wrap gap-3 justify-content-center mt-4">
+                  <button
+                    onClick={() => router.push('/components/crudReservas')}
+                    className="btn btn-primary px-4 py-3 shadow-sm"
+                  >
+                    <i className="fas fa-calendar-plus fa-2x mb-2"></i>
+                    <div>Nova Reserva</div>
+                    <small className="d-block">Para este período</small>
+                  </button>
+
+                  <button
+                    onClick={() => router.push('/components/crudQuartos')}
+                    className="btn btn-info px-4 py-3 shadow-sm"
+                  >
+                    <i className="fas fa-bed fa-2x mb-2"></i>
+                    <div>Ver Quartos</div>
+                    <small className="d-block">Disponíveis</small>
+                  </button>
+
+                  <button
+                    onClick={() => router.push('/components/crudCliente')}
+                    className="btn btn-success px-4 py-3 shadow-sm"
+                  >
+                    <i className="fas fa-user-plus fa-2x mb-2"></i>
+                    <div>Cadastrar</div>
+                    <small className="d-block">Novo Cliente</small>
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Menu principal */}
+          <div className="card">
+            <div className="card-header bg-light">
+              <h2 className="h5 mb-0">
+                <i className="fas fa-bars me-2"></i>
+                Menu Principal
+              </h2>
+            </div>
+            <div className="card-body">
+              <div className="d-flex flex-wrap gap-3 justify-content-center">
+                <button
+                  onClick={() => router.push('/components/crudCliente')}
+                  className="btn btn-outline-success px-4 py-2"
+                >
+                  <i className="fas fa-users me-2"></i>Clientes
+                </button>
+                <button
+                  onClick={() => router.push('/components/crudQuartos')}
+                  className="btn btn-outline-primary px-4 py-2"
+                >
+                  <i className="fas fa-bed me-2"></i>Quartos
+                </button>
+                <button
+                  onClick={() => router.push('/components/crudReservas')}
+                  className="btn btn-outline-info px-4 py-2"
+                >
+                  <i className="fas fa-calendar-check me-2"></i>Reservas
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
-
-    <div className="card">
-      <h2>Cadastrar Quarto</h2>
-      <input placeholder="Número" value={quartoNumero} onChange={e => setQuartoNumero(e.target.value)} />
-      <input placeholder="Tipo (ex: Suíte)" value={quartoTipo} onChange={e => setQuartoTipo(e.target.value)} />
-      <input placeholder="Preço" value={quartoPreco} onChange={e => setQuartoPreco(e.target.value)} />
-      <button onClick={criarQuarto}>Salvar Quarto</button>
-    </div>
-
-    <div className="card">
-      <h2>Fazer Reserva</h2>
-      <select value={reservaCliente} onChange={e => setReservaCliente(e.target.value)}>
-        <option value="">Selecione o Cliente</option>
-        {clientes.map(c => (
-          <option key={c.id} value={c.id}>{c.nome}</option>
-        ))}
-      </select>
-
-      <select value={reservaQuarto} onChange={e => setReservaQuarto(e.target.value)}>
-        <option value="">Selecione o Quarto</option>
-        {quartos.map(q => (
-          <option key={q.id} value={q.id}>Quarto {q.numero} - {q.tipo}</option>
-        ))}
-      </select>
-
-      <input type="date" value={dataInicio} onChange={e => setDataInicio(e.target.value)} />
-      <input type="date" value={dataFim} onChange={e => setDataFim(e.target.value)} />
-      <button onClick={criarReserva}>Salvar Reserva</button>
-    </div>
-    
-    <div className="card">
-      <h2>Consultar Quartos Disponíveis</h2>
-      <input type="date" value={dataInicio} onChange={e => setDataInicio(e.target.value)} />
-      <input type="date" value={dataFim} onChange={e => setDataFim(e.target.value)} />
-      <button onClick={buscarQuartosDisponiveis}>Buscar Disponíveis</button>
-
-      <ul>
-        {quartosDisponiveis.length > 0 ? (
-          quartosDisponiveis.map(q => (
-            <li key={q.id}>
-              Quarto {q.numero} - {q.tipo} - R$ {q.preco.toFixed(2)}
-            </li>
-          ))
-        ) : (
-          <p>Nenhum quarto disponível neste período.</p>
-        )}
-      </ul>
-    </div>
-
-    <div className="card">
-      <h2>Reservas</h2>
-      <ul>
-        {reservas.map(r => (
-          <li key={r.id}>
-            <strong>{r.cliente.nome}</strong> reservou o quarto {r.quarto.numero} ({r.quarto.tipo})<br />
-            de <em>{new Date(r.dataInicio).toLocaleDateString()}</em> até <em>{new Date(r.dataFim).toLocaleDateString()}</em>
-          </li>
-        ))}
-      </ul>
-    </div>
-    <div className='card'>
-
-        <p>* Criar Menus de acesso /clientes /quartos / reservas.</p>
-        <p>* Criar CRUD de clientes.</p>
-        <p>* Criar CRUD de quartos.</p>
-        <p>* Criar CRUD de reservas.</p>
-        <p>* Criar Opções Check-in / Check-out com as datas.</p>
-        
-
-    </div>
-
-
-    <style jsx>{`
-      .container {
-        padding: 40px;
-        font-family: 'Segoe UI', sans-serif;
-        background: #f8f9fa;
-        max-width: 900px;
-        margin: 0 auto;
-      }
-
-      h1 {
-        text-align: center;
-        color: #333;
-      }
-
-      .card {
-        background: white;
-        padding: 20px;
-        margin-bottom: 30px;
-        border-radius: 8px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-      }
-
-      input, select {
-        display: block;
-        margin-bottom: 10px;
-        padding: 8px;
-        width: 100%;
-        max-width: 300px;
-        border: 1px solid #ccc;
-        border-radius: 4px;
-      }
-
-      button {
-        padding: 10px 20px;
-        background-color: #0070f3;
-        color: white;
-        border: none;
-        border-radius: 4px;
-        cursor: pointer;
-        margin-top: 10px;
-      }
-
-      button:hover {
-        background-color: #005bb5;
-      }
-
-      ul {
-        margin-top: 10px;
-        padding-left: 20px;
-      }
-
-      li {
-        margin-bottom: 10px;
-      }
-    `}</style>
-  </div>
-  
-)
-
+  );
 }
